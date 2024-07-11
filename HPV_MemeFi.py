@@ -434,13 +434,15 @@ if __name__ == '__main__':
         MemeFi = HPV_MemeFi(Account, URL, Proxy)
         MemeFi.Run()
 
+    if Proxy:
+        DIVIDER = Fore.BLACK + ' | '
+        Time = Fore.BLUE + f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+        Text = Fore.GREEN + f'Проверка прокси окончена! Работоспособные: {len(Proxy)}'
+        print(Time + DIVIDER + '🌐' + DIVIDER + Text)
+        sleep(5)
+
     for Account, URL in HPV_Get_Accounts().items():
         if Proxy:
-            DIVIDER = Fore.BLACK + ' | '
-            Time = Fore.BLUE + f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
-            Text = Fore.GREEN + f'Проверка прокси окончена! Работоспособные: {len(Proxy)}'
-            print(Time + DIVIDER + '🌐' + DIVIDER + Text)
-            sleep(5)
             Proxy = cycle(Proxy)
             Thread(target=Start_Thread, args=(Account, URL, next(Proxy),)).start()
         else:
