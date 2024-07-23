@@ -51,23 +51,11 @@ class HPV_MemeFi:
         [3.2] - `Если TapBot отсутствует - происходит его приобретение`
             [3.2.1] - `Покупка TapBot`
     
-    
-    [4] - `Активация бустов`
-        [4.1] - `Активация 'Turbo' буста`
-            [4.1.1] - `Ожидание от 33 до 103 секунд`
             
-            [4.1.2] - `Повторение действий допустимое количество раз через каждые 33-103 секунд`
-        
-        [4.2] - `Активация `Recharge` буста`
-            [4.2.1] - `Ожидание от 33 до 103 секунд`
-            
-            [4.2.2] - `Повторение действий допустимое количество раз через каждые 33-103 секунд`
-            
-            
-    [5] - `6 часов беспрерывного тапания. 18 циклов по 20 минут`
+    [4] - `Ожидание от 5 до 6 часов`
     
     
-    [6] - `Повторение действий от 1 по 5 пункт после 6 часов беспрерывного тапания`
+    [5] - `Повторение действий через 5-6 часов`
     '''
 
 
@@ -179,6 +167,20 @@ class HPV_MemeFi:
 
 
 
+    def Get_Bots(self) -> int:
+        '''Получение кол-ва доступных ботов'''
+
+        URL = 'https://api-gw-tg.memefi.club/graphql'
+        Headers = {'accept': '*/*', 'accept-language': 'ru,en;q=0.9,uz;q=0.8', 'authorization': f'Bearer {self.Token}', 'content-type': 'application/json', 'origin': 'https://tg-app.memefi.club', 'priority': 'u=1, i', 'referer': 'https://tg-app.memefi.club/', 'sec-fetch-dest': 'empty', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site', 'user-agent': self.UA}
+        Json = {'operationName': 'TapbotConfig', 'variables': {}, 'query': 'fragment FragmentTapBotConfig on TelegramGameTapbotOutput {\n  damagePerSec\n  endsAt\n  id\n  isPurchased\n  startsAt\n  totalAttempts\n  usedAttempts\n  __typename\n}\n\nquery TapbotConfig {\n  telegramGameTapbotGetConfig {\n    ...FragmentTapBotConfig\n    __typename\n  }\n}'}
+
+        try:
+            return 3 - post(URL, headers=Headers, json=Json, proxies=self.Proxy).json()['data']['telegramGameTapbotGetConfig']['usedAttempts']
+        except:
+            return 0
+
+
+
     def Buy_TapBot(self) -> None:
         '''Покупка TapBot, если он ещё не приобретён'''
 
@@ -225,39 +227,6 @@ class HPV_MemeFi:
             self.Logging('Success', self.Name, '🟢', 'TapBot запущен!')
         except:
             self.Logging('Error', self.Name, '🔴', 'Не удалось запустить TapBot!')
-
-
-
-    def Click(self) -> None:
-        '''Совершение тапов'''
-
-        Taps_Count = randint(7, 23) # Кол-во нажатий
-        Vector = ','.join(map(str, [randint(1, 3) for _ in range(Taps_Count)])) # Рандомная позиция каждого нажатия
-
-        Headers = {'authority': 'api-gw-tg.memefi.club', 'accept': '*/*', 'accept-language': 'ru,en;q=0.9,uz;q=0.8', 'authorization': f'Bearer {self.Token}', 'content-type': 'application/json', 'origin': 'https://tg-app.memefi.club', 'referer': 'https://tg-app.memefi.club/', 'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "YaBrowser";v="24.4", "Yowser";v="2.5"', 'sec-ch-ua-mobile': '?0', 'sec-ch-ua-platform': '"Windows"', 'sec-fetch-dest': 'empty', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site', 'user-agent': self.UA}
-        Json = {'operationName': 'MutationGameProcessTapsBatch', 'variables': {'payload': {'nonce': 'b362973c2a995d2295d4428229d4658a6812bf89bf4b04a888d2def37de623ba', 'tapsCount': Taps_Count, 'vector': Vector}}, 'query': 'mutation MutationGameProcessTapsBatch($payload: TelegramGameTapsBatchInput!) {\n  telegramGameProcessTapsBatch(payload: $payload) {\n    ...FragmentBossFightConfig\n    __typename\n  }\n}\n\nfragment FragmentBossFightConfig on TelegramGameConfigOutput {\n  _id\n  coinsAmount\n  currentEnergy\n  maxEnergy\n  weaponLevel\n  zonesCount\n  tapsReward\n  energyLimitLevel\n  energyRechargeLevel\n  tapBotLevel\n  currentBoss {\n    _id\n    level\n    currentHealth\n    maxHealth\n    __typename\n  }\n  freeBoosts {\n    _id\n    currentTurboAmount\n    maxTurboAmount\n    turboLastActivatedAt\n    turboAmountLastRechargeDate\n    currentRefillEnergyAmount\n    maxRefillEnergyAmount\n    refillEnergyLastActivatedAt\n    refillEnergyAmountLastRechargeDate\n    __typename\n  }\n  bonusLeaderDamageEndAt\n  bonusLeaderDamageStartAt\n  bonusLeaderDamageMultiplier\n  nonce\n  __typename\n}'}
-
-        try:
-            post(self.Domain, headers=Headers, json=Json, proxies=self.Proxy).json()['data']['telegramGameProcessTapsBatch']['coinsAmount']
-            self.Logging('Success', self.Name, '🟢', 'Тап совершён!')
-        except:
-            self.Logging('Error', self.Name, '🔴', 'Не удалось тапнуть!')
-
-
-
-    def Activation_Boosts(self, Boost: Literal['Turbo', 'Recharge']) -> bool:
-        '''Активайия буста Turbo или Recharge'''
-
-        Headers = {'authority': 'api-gw-tg.memefi.club', 'accept': '*/*', 'accept-language': 'ru,en;q=0.9,uz;q=0.8', 'authorization': f'Bearer {self.Token}', 'content-type': 'application/json', 'origin': 'https://tg-app.memefi.club', 'referer': 'https://tg-app.memefi.club/', 'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "YaBrowser";v="24.4", "Yowser";v="2.5"', 'sec-ch-ua-mobile': '?0', 'sec-ch-ua-platform': '"Windows"', 'sec-fetch-dest': 'empty', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site', 'user-agent': self.UA}
-        Json = {'operationName': 'telegramGameActivateBooster', 'variables': {'boosterType': Boost}, 'query': 'mutation telegramGameActivateBooster($boosterType: BoosterType!) {\n  telegramGameActivateBooster(boosterType: $boosterType) {\n    ...FragmentBossFightConfig\n    __typename\n  }\n}\n\nfragment FragmentBossFightConfig on TelegramGameConfigOutput {\n  _id\n  coinsAmount\n  currentEnergy\n  maxEnergy\n  weaponLevel\n  zonesCount\n  tapsReward\n  energyLimitLevel\n  energyRechargeLevel\n  tapBotLevel\n  currentBoss {\n    _id\n    level\n    currentHealth\n    maxHealth\n    __typename\n  }\n  freeBoosts {\n    _id\n    currentTurboAmount\n    maxTurboAmount\n    turboLastActivatedAt\n    turboAmountLastRechargeDate\n    currentRefillEnergyAmount\n    maxRefillEnergyAmount\n    refillEnergyLastActivatedAt\n    refillEnergyAmountLastRechargeDate\n    __typename\n  }\n  bonusLeaderDamageEndAt\n  bonusLeaderDamageStartAt\n  bonusLeaderDamageMultiplier\n  nonce\n  __typename\n}'}
-
-        try:
-            post(self.Domain, headers=Headers, json=Json, proxies=self.Proxy).json()['data']['telegramGameActivateBooster']['coinsAmount']
-            self.Logging('Success', self.Name, '⭐️', f'Буст `{Boost}` активирован!')
-            return True
-        except:
-            self.Logging('Error', self.Name, '🔴', f'Не удалось активировать буст `{Boost}`!')
-            return False
 
 
 
@@ -352,7 +321,8 @@ class HPV_MemeFi:
 
                     # Взаимодействие с TapBot
                     if Bot: # Если TapBot уже приобретен - происходит сбор монет и перезапуск бота
-                        for _ in range(3):
+                        Get_Bots = self.Get_Bots() # Получение кол-ва доступных ботов
+                        for _ in range(Get_Bots):
                             sleep(randint(33, 103)) # Предварительно ожидание
                             self.TapBot_Collection() # Сбор монет, собранных с помощью TapBota
 
@@ -374,45 +344,14 @@ class HPV_MemeFi:
                         self.Buy_TapBot()
 
 
-                    sleep(randint(33, 103)) # Промежуточное ожидание
+                    Waiting = randint(18_000, 22_000) # Значение времени в секундах для ожидания
+                    Waiting_STR = (datetime.now() + timedelta(seconds=Waiting)).strftime('%Y-%m-%d %H:%M:%S') # Значение времени в читаемом виде
 
+                    self.Logging('Success', self.Name, '💰', f'Баланс: {self.Get_Info()["Balance"]} /// Уровень босса: {self.Get_Info()["Boss_LVL"]}')
+                    self.Logging('Warning', self.Name, '⏳', f'Следующий старт сбора монет: {Waiting_STR}!')
 
-                    # Активация `Turbo` буста
-                    for _ in range(Turbo):
-                        if self.Activation_Boosts('Turbo'): # Активайия буста `Turbo`
-                            for _ in range(randint(22, 33)):
-                                self.Click() # Совершение тапов
-                                sleep(uniform(0.11, 0.22)) # Промежуточное ожидание
-
-                            sleep(randint(33, 103)) # Промежуточное ожидание
-
-                    # Активация `Recharge` буста
-                    for _ in range(Recharge):
-                        if self.Activation_Boosts('Recharge'): # Активайия буста `Recharge`
-                            while True:
-                                sleep(uniform(0.11, 0.22)) # Промежуточное ожидание
-                                self.Click() # Совершение тапов
-                                if not self.Get_Info()['Current_Energy']:
-                                    break
-
-                        sleep(randint(33, 103)) # Промежуточное ожидание
-
-
-                    sleep(randint(33, 103)) # Промежуточное ожидание
-
-
-                    # 6 часов беспрерывного тапания. 18 циклов по 20 минут
-                    for _ in range(18):
-                        self.ReAuthentication() # Повторная аутентификация аккаунта
-
-                        for _ in range(1_200):
-                            self.Click() # Совершение тапов
-                            sleep(uniform(0.88, 1.12)) # Промежуточное ожидание
-
-                        _INFO = self.Get_Info()
-                        _Balance, _Boss = _INFO['Balance'], _INFO['Boss_LVL'] # Баланс и Уровень босса
-                        self.Logging('Success', self.Name, '💰', f'Баланс: {_Balance} /// Уровень босса: {_Boss}')
-
+                    sleep(Waiting) # Ожидание от 5 до 6 часов
+                    self.ReAuthentication() # Повторная аутентификация аккаунта
 
                 else: # Если аутентификация не успешна
                     sleep(randint(33, 66)) # Ожидание от 33 до 66 секунд
@@ -443,11 +382,14 @@ if __name__ == '__main__':
         print(Time + DIVIDER + '🌐' + DIVIDER + Text)
         sleep(5)
 
-    for Account, URL in HPV_Get_Accounts().items():
-        if Proxy:
-            Proxy = cycle(Proxy)
-            Thread(target=Start_Thread, args=(Account, URL, next(Proxy),)).start()
-        else:
-            Thread(target=Start_Thread, args=(Account, URL,)).start()
+    try:
+        for Account, URL in HPV_Get_Accounts().items():
+            if Proxy:
+                Proxy = cycle(Proxy)
+                Thread(target=Start_Thread, args=(Account, URL, next(Proxy),)).start()
+            else:
+                Thread(target=Start_Thread, args=(Account, URL,)).start()
+    except:
+        print(Fore.RED + '\n\tОшибка чтения `HPV_Account.json`, ссылки указаны некорректно!')
 
 
